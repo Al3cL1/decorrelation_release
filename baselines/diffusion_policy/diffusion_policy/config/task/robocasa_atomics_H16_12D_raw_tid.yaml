@@ -1,0 +1,59 @@
+name: robocasa_atomics_H16_12D_raw_tid
+
+# DP baseline on the same zarr as FDP's robocasa/atomics_H16_12D_raw_tid.
+
+shape_meta: &shape_meta
+  obs:
+    robot0_agentview_left_rgb:
+      shape: [3, 128, 128]
+      type: rgb
+    robot0_agentview_right_rgb:
+      shape: [3, 128, 128]
+      type: rgb
+    robot0_eye_in_hand_rgb:
+      shape: [3, 128, 128]
+      type: rgb
+    robot0_base_pos:
+      shape: [3]
+      type: low_dim
+    robot0_base_quat:
+      shape: [4]
+      type: low_dim
+    robot0_base_to_eef_pos:
+      shape: [3]
+      type: low_dim
+    robot0_base_to_eef_quat:
+      shape: [4]
+      type: low_dim
+    robot0_gripper_qpos:
+      shape: [2]
+      type: low_dim
+    task_id:
+      shape: [1]
+      type: low_dim
+  action:
+    shape: [12]
+
+dataset:
+  _target_: diffusion_policy.dataset.robocasa_zarr_dataset.RobocasaZarrDataset
+  shape_meta: *shape_meta
+  zarr_path: ${oc.env:DATA_ROOT}/robocasa/zarr/atomics_v365_a12_raw_N1000.zarr
+  horizon: ${horizon}
+  pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
+  pad_after: ${eval:'${n_action_steps}-1'}
+  n_obs_steps: ${dataset_obs_steps}
+  seed: 42
+  val_ratio: 0.05
+
+env_runner:
+  _target_: diffusion_policy.env_runner.dummy_image_runner.DummyImageRunner
+  shape_meta: *shape_meta
+
+checkpoint:
+  topk:
+    monitor_key: train_loss
+    mode: min
+    k: 3
+    format_str: 'epoch={epoch:04d}-train_loss={train_loss:.4f}.ckpt'
+  save_last_ckpt: True
+  save_last_snapshot: False

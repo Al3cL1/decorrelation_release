@@ -1,0 +1,68 @@
+name: libero-atomics25
+
+task_name: libero-atomics25
+lazy_eval: true    # don't instantiate env_runner during training; post-hoc
+                   # eval instantiates env_runner only at eval time (matches
+                   # the robocasa/rlbench convention in this fork).
+
+# 25 LIBERO-90 tasks from the scenes of composites6 (list in fdp/env/libero/factory.py).
+
+shape_meta: &shape_meta
+  obs:
+    agentview_rgb:
+      shape: [128, 128, 3]
+      type: rgb
+    robot0_eye_in_hand_rgb:
+      shape: [128, 128, 3]
+      type: rgb
+    robot0_eef_pos:
+      shape: [3]
+      type: state
+    robot0_eef_quat:
+      shape: [4]
+      type: state
+    robot0_gripper_qpos:
+      shape: [2]
+      type: state
+    task_uid:
+      shape: [1]
+      type: state
+  action:
+    shape: [7]
+
+env_runner:
+  _target_: fdp.env_runner.libero_runner.LiberoRunner
+  task_name: atomics25
+  n_test: 500        # 25 tasks x 20 episodes
+  n_test_vis: 25     # 1 video per task
+  n_obs_steps: ${n_obs_steps}
+  n_action_steps: ${n_action_steps}
+  fps: 20
+  # must be a multiple of the task count (each env is pinned to one task)
+  n_parallel_envs: 25
+  image_size: 128
+  camera_names:
+    - agentview
+    - robot0_eye_in_hand
+  state_ports:
+    - robot0_eef_pos
+    - robot0_eef_quat
+    - robot0_gripper_qpos
+  max_episode_steps: 400   # single-skill LIBERO-90 demos run ~100-250 steps;
+                           # 400 leaves headroom so truncation never floors SR.
+
+dataset:
+  _target_: fdp.dataset.zarr_dataset.ZarrDataset
+  zarr_path: ${oc.env:DATA_ROOT}/libero/zarr/atomics25_N1250.zarr
+  obs_keys:
+    - agentview_rgb
+    - robot0_eye_in_hand_rgb
+    - robot0_eef_pos
+    - robot0_eef_quat
+    - robot0_gripper_qpos
+    - task_uid
+  action_key: action
+  n_obs_steps: ${n_obs_steps}
+  n_action_steps: ${horizon}
+  seed: ${seed}
+  val_ratio: 0.05

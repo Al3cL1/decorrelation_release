@@ -1,0 +1,52 @@
+name: libero_atomics25_tid
+
+# DP baseline on the same zarr as FDP's libero/atomics25.
+
+shape_meta: &shape_meta
+  obs:
+    agentview_rgb:
+      shape: [3, 128, 128]
+      type: rgb
+    robot0_eye_in_hand_rgb:
+      shape: [3, 128, 128]
+      type: rgb
+    robot0_eef_pos:
+      shape: [3]
+      type: low_dim
+    robot0_eef_quat:
+      shape: [4]
+      type: low_dim
+    robot0_gripper_qpos:
+      shape: [2]
+      type: low_dim
+    task_uid:
+      shape: [1]
+      type: low_dim
+  action:
+    shape: [7]
+
+dataset:
+  _target_: diffusion_policy.dataset.robocasa_zarr_dataset.RobocasaZarrDataset
+  shape_meta: *shape_meta
+  zarr_path: ${oc.env:DATA_ROOT}/libero/zarr/atomics25_N1250.zarr
+  horizon: ${horizon}
+  pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
+  pad_after: ${eval:'${n_action_steps}-1'}
+  n_obs_steps: ${dataset_obs_steps}
+  seed: 42
+  val_ratio: 0.05
+  # load into RAM, as FDP's ZarrDataset does
+  in_ram: true
+
+env_runner:
+  _target_: diffusion_policy.env_runner.dummy_image_runner.DummyImageRunner
+  shape_meta: *shape_meta
+
+checkpoint:
+  topk:
+    monitor_key: train_loss
+    mode: min
+    k: 3
+    format_str: 'epoch={epoch:04d}-train_loss={train_loss:.4f}.ckpt'
+  save_last_ckpt: True
+  save_last_snapshot: False

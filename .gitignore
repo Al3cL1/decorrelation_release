@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.egg-info/
+outputs/
+data/
+wandb/
+*.ckpt
+*.zarr
+output/
+MUJOCO_LOG.TXT

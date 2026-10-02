@@ -1,0 +1,69 @@
+# decorr-libero env: LIBERO (robosuite 1.4.0). LIBERO itself is installed by hand:
+#   conda env create -f environment-libero.yml && conda activate decorr-libero
+#   pip install -e .
+#   git clone https://github.com/Lifelong-Robot-Learning/LIBERO.git && cd LIBERO && git checkout 8f1084e
+#   pip install --no-deps -e .
+#   echo "$PWD" > "$(python -c 'import site;print(site.getsitepackages()[0])')/libero_repo.pth"
+# LIBERO writes ~/.libero/config.yaml on first import; point its dataset path at your hdf5 dir.
+name: decorr-libero
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - cmake<4      # egl_probe (a robomimic dependency) builds from source; CMake 4 rejects it
+  - ffmpeg=7.1
+  - libegl
+  - libgl
+  - libglvnd
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cu128
+      - torch==2.8.0
+      - torchvision==0.23.0
+      # core (same pins as environment.yml)
+      - accelerate==1.13.0
+      - diffusers==0.38.0
+      - transformers==5.7.0
+      - huggingface_hub==1.13.0
+      - hydra-core==1.3.2
+      - omegaconf==2.3.0
+      - zarr==3.1.6
+      - numcodecs==0.16.5
+      - numpy==2.2.5
+      - numba==0.61.2
+      - einops==0.8.2
+      - dill==0.3.8
+      - click==8.3.3
+      - wandb==0.26.1
+      - gymnasium==1.3.0
+      - gym==0.26.2
+      - robomimic==0.2.0
+      - tensorboard==2.20.0
+      # sim / rendering
+      - mujoco==3.3.1
+      - PyOpenGL==3.1.10
+      - glfw==2.10.0
+      - av==17.0.1
+      - imageio==2.37.3
+      - imageio-ffmpeg==0.6.0
+      - opencv-python==4.13.0.92
+      - h5py==3.16.0
+      - pyquaternion==0.9.9
+      - lxml==6.1.0
+      # analysis / plotting
+      - scipy==1.15.3
+      - scikit-learn==1.8.0
+      - matplotlib==3.10.9
+      - pandas==3.0.2
+      - pillow==12.2.0
+      - tqdm==4.67.3
+      - PyYAML==6.0.3
+      - termcolor==3.3.0
+      - natsort==8.4.0
+      # LIBERO's simulator stack (robosuite 1.4.0 exactly; later versions break LIBERO)
+      - robosuite==1.4.0
+      - bddl==1.0.1
+      - easydict
+      - thop
+      - future
+      - cloudpickle

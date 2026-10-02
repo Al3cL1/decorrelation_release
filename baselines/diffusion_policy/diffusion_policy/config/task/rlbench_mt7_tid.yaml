@@ -1,0 +1,51 @@
+name: rlbench_mt7_tid
+
+# DP baseline on the same zarr as FDP's rlbench/mt7_tid.
+
+shape_meta: &shape_meta
+  obs:
+    front_rgb:
+      shape: [3, 128, 128]
+      type: rgb
+    wrist_rgb:
+      shape: [3, 128, 128]
+      type: rgb
+    overhead_rgb:
+      shape: [3, 128, 128]
+      type: rgb
+    joint_positions:
+      shape: [7]
+      type: low_dim
+    gripper_joint_positions:
+      shape: [2]
+      type: low_dim
+    task_id:
+      shape: [1]
+      type: low_dim
+  action:
+    shape: [9]
+
+dataset:
+  _target_: diffusion_policy.dataset.robocasa_zarr_dataset.RobocasaZarrDataset
+  shape_meta: *shape_meta
+  zarr_path: ${oc.env:DATA_ROOT}/rlbench/mt7_N350_tid.zarr
+  horizon: ${horizon}
+  pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
+  pad_after: ${eval:'${n_action_steps}-1'}
+  n_obs_steps: ${dataset_obs_steps}
+  seed: 42
+  val_ratio: 0.1
+  action_key: joint_action
+
+env_runner:
+  _target_: diffusion_policy.env_runner.dummy_image_runner.DummyImageRunner
+  shape_meta: *shape_meta
+
+checkpoint:
+  topk:
+    monitor_key: train_loss
+    mode: min
+    k: 3
+    format_str: 'epoch={epoch:04d}-train_loss={train_loss:.4f}.ckpt'
+  save_last_ckpt: True
+  save_last_snapshot: False

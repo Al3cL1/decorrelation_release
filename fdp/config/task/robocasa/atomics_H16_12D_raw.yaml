@@ -1,0 +1,76 @@
+name: robocasa-atomics-H16_12D-raw
+
+task_name: robocasa-atomics-H16_12D-raw
+lazy_eval: true    # env_runner is only built at eval time (eval_robocasa.py)
+
+# RoboCasa atomics; 12D action in raw v365 order [base(4), ctrl(1), eef_pos(3), eef_rot(3), grip(1)].
+
+shape_meta: &shape_meta
+  obs:
+    robot0_agentview_left_rgb:
+      shape: [128, 128, 3]
+      type: rgb
+    robot0_agentview_right_rgb:
+      shape: [128, 128, 3]
+      type: rgb
+    robot0_eye_in_hand_rgb:
+      shape: [128, 128, 3]
+      type: rgb
+    robot0_base_pos:
+      shape: [3]
+      type: state
+    robot0_base_quat:
+      shape: [4]
+      type: state
+    robot0_base_to_eef_pos:
+      shape: [3]
+      type: state
+    robot0_base_to_eef_quat:
+      shape: [4]
+      type: state
+    robot0_gripper_qpos:
+      shape: [2]
+      type: state
+  action:
+    shape: [12]
+
+env_runner:
+  _target_: fdp.env_runner.robocasa_runner.RobocasaRunner
+  task_name: atomics
+  task_group: atomics
+  n_test: 140       # 20 episodes x 7 evaluated tasks
+  n_test_vis: 7     # 1 video per task
+  n_obs_steps: ${n_obs_steps}
+  n_action_steps: ${n_action_steps}
+  fps: 20
+  n_parallel_envs: 7
+  image_size: 128
+  camera_names:
+    - robot0_agentview_left
+    - robot0_agentview_right
+    - robot0_eye_in_hand
+  state_ports:
+    - robot0_base_pos
+    - robot0_base_quat
+    - robot0_base_to_eef_pos
+    - robot0_base_to_eef_quat
+    - robot0_gripper_qpos
+  max_episode_steps: 500
+
+dataset:
+  _target_: fdp.dataset.zarr_dataset.ZarrDataset
+  zarr_path: ${oc.env:DATA_ROOT}/robocasa/zarr/atomics_v365_a12_raw_N1000.zarr
+  obs_keys:
+    - robot0_agentview_left_rgb
+    - robot0_agentview_right_rgb
+    - robot0_eye_in_hand_rgb
+    - robot0_base_pos
+    - robot0_base_quat
+    - robot0_base_to_eef_pos
+    - robot0_base_to_eef_quat
+    - robot0_gripper_qpos
+  action_key: action
+  n_obs_steps: ${n_obs_steps}
+  n_action_steps: ${horizon}
+  seed: ${seed}
+  val_ratio: 0.05

@@ -1,0 +1,65 @@
+name: libero-decomp12
+
+task_name: libero-decomp12
+lazy_eval: true
+
+# Eval only (eval_libero.py --task_yaml): composites6 policies scored per sub-goal.
+
+shape_meta: &shape_meta
+  obs:
+    agentview_rgb:
+      shape: [128, 128, 3]
+      type: rgb
+    robot0_eye_in_hand_rgb:
+      shape: [128, 128, 3]
+      type: rgb
+    robot0_eef_pos:
+      shape: [3]
+      type: state
+    robot0_eef_quat:
+      shape: [4]
+      type: state
+    robot0_gripper_qpos:
+      shape: [2]
+      type: state
+    task_uid:
+      shape: [1]
+      type: state
+  action:
+    shape: [7]
+
+env_runner:
+  _target_: fdp.env_runner.libero_runner.LiberoRunner
+  task_name: decomp12
+  n_test: 240        # 12 tasks x 20 episodes
+  n_test_vis: 12
+  use_parent_uid: true
+  n_obs_steps: ${n_obs_steps}
+  n_action_steps: ${n_action_steps}
+  fps: 20
+  n_parallel_envs: 12   # must be a multiple of the 12-task count
+  image_size: 128
+  camera_names:
+    - agentview
+    - robot0_eye_in_hand
+  state_ports:
+    - robot0_eef_pos
+    - robot0_eef_quat
+    - robot0_gripper_qpos
+  max_episode_steps: 400   # single sub-task, same as atomics25
+
+dataset:
+  _target_: fdp.dataset.zarr_dataset.ZarrDataset
+  zarr_path: ${oc.env:DATA_ROOT}/libero/zarr/composites6_N300.zarr
+  obs_keys:
+    - agentview_rgb
+    - robot0_eye_in_hand_rgb
+    - robot0_eef_pos
+    - robot0_eef_quat
+    - robot0_gripper_qpos
+    - task_uid
+  action_key: action
+  n_obs_steps: ${n_obs_steps}
+  n_action_steps: ${horizon}
+  seed: ${seed}
+  val_ratio: 0.05
